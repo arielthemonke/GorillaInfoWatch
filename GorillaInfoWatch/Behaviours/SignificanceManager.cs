@@ -59,45 +59,10 @@ namespace GorillaInfoWatch.Behaviours
             }
         }
 
-        public async void OnJoinedRoom()
+        public void OnJoinedRoom()
         {
             NetPlayer[] playersInRoom = NetworkSystem.Instance.PlayerListOthers;
             playersInRoom.ForEach(player => CheckPlayer(player, SignificanceCheckScope.PlayerJoined));
-
-            await new WaitForSeconds(0.5f).AsAwaitable();
-
-            List<Notification> list = [];
-
-            foreach (NetPlayer player in playersInRoom)
-            {
-                if (player == null || player.IsNull) continue;
-
-                string userId = player.UserId;
-
-                if (GFriends.IsFriend(userId))
-                {
-                    list.Add(new("Your friend is here", string.Format("<color=#{0}>{1}</color>", ColorUtility.ToHtmlStringRGB(GFriends.m_clrFriend), player.GetName().EnforcePlayerNameLength()), 1f));
-                    continue;
-                }
-
-                if (GFriends.IsVerified(userId))
-                {
-                    list.Add(new("A verified user is here", string.Format("<color=#{0}>{1}</color>", ColorUtility.ToHtmlStringRGB(GFriends.m_clrVerified), player.GetName().EnforcePlayerNameLength()), 1f));
-                    continue;
-                }
-
-                if (Significance.TryGetValue(player, out PlayerSignificance[] significance) && significance.Any(item => item is FigureSignificance))
-                {
-                    list.Add(new("A recognized user is here", player.GetName().EnforcePlayerNameLength(), 1f));
-                    continue;
-                }
-            }
-
-            foreach (Notification notification in list)
-            {
-                Notifications.SendNotification(notification);
-                await new WaitForSeconds(1f).AsAwaitable();
-            }
         }
 
         public void OnPlayerJoined(NetPlayer player)
@@ -113,7 +78,7 @@ namespace GorillaInfoWatch.Behaviours
             {
                 Notifications.SendNotification(new("Your friend has joined", string.Format("<color=#{0}>{1}</color>", ColorUtility.ToHtmlStringRGB(GFriends.m_clrFriend), player.GetName().EnforcePlayerNameLength()), 3f, Sounds.notificationPositive, new Notification.ExternalScreen(typeof(PlayerInspectorScreen), $"Inspect {player.GetName().EnforceLength(12)}", delegate ()
                 {
-                    player = PlayerUtilities.GetPlayer(userId);
+                    player = PlayerUtility.GetPlayer(userId);
                     if (player != null && !player.IsNull) PlayerInspectorScreen.UserId = player.UserId;
                 })));
                 return;
@@ -123,7 +88,7 @@ namespace GorillaInfoWatch.Behaviours
             {
                 Notifications.SendNotification(new("A verified user has joined", string.Format("<color=#{0}>{1}</color>", ColorUtility.ToHtmlStringRGB(GFriends.m_clrVerified), player.GetName().EnforcePlayerNameLength()), 3f, Sounds.notificationPositive, new Notification.ExternalScreen(typeof(PlayerInspectorScreen), $"Inspect {player.GetName().EnforceLength(12)}", delegate ()
                 {
-                    player = PlayerUtilities.GetPlayer(userId);
+                    player = PlayerUtility.GetPlayer(userId);
                     if (player != null && !player.IsNull) PlayerInspectorScreen.UserId = player.UserId;
                 })));
                 return;
@@ -133,7 +98,7 @@ namespace GorillaInfoWatch.Behaviours
             {
                 Notifications.SendNotification(new("A notable user has joined", player.GetName().EnforcePlayerNameLength(), 3f, Sounds.notificationPositive, new Notification.ExternalScreen(typeof(PlayerInspectorScreen), $"Inspect {player.NickName.SanitizeName()}", delegate ()
                 {
-                    player = PlayerUtilities.GetPlayer(userId);
+                    player = PlayerUtility.GetPlayer(userId);
                     if (player != null && !player.IsNull) PlayerInspectorScreen.UserId = player.UserId;
                 })));
             }
@@ -170,7 +135,7 @@ namespace GorillaInfoWatch.Behaviours
                 string displayName = CosmeticsController.instance.GetItemDisplayName(CosmeticsController.instance.GetItemFromDict(item.ItemId));
                 Notifications.SendNotification(new($"A notable cosmetic was detected", displayName, 5, Sounds.notificationPositive, new Notification.ExternalScreen(typeof(PlayerInspectorScreen), $"Inspect {player.NickName.SanitizeName()}", delegate ()
                 {
-                    player = PlayerUtilities.GetPlayer(userId);
+                    player = PlayerUtility.GetPlayer(userId);
                     if (player != null && !player.IsNull) PlayerInspectorScreen.UserId = player.UserId;
                 })));
             }
@@ -204,7 +169,7 @@ namespace GorillaInfoWatch.Behaviours
                 array[2] = (Array.Find(Main.Significance_Cosmetics.ToArray(), cosmetic => cosmetic.IsValid(player)) is ItemSignificance cosmetic) ? cosmetic : null;
             }
 
-            if (checkScope.HasFlag(SignificanceCheckScope.InfoWatch) && !array.Contains(Main.Significance_Watch) && PlayerUtilities.HasInfoWatch(player))
+            if (checkScope.HasFlag(SignificanceCheckScope.InfoWatch) && !array.Contains(Main.Significance_Watch) && PlayerUtility.HasInfoWatch(player))
             {
                 array[3] = Main.Significance_Watch;
             }
